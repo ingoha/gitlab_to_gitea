@@ -376,6 +376,18 @@ def _import_project_issues(gitea_api: pygitea, issues: [gitlab.v4.objects.Projec
             })
             if import_response.ok:
                 print_info("Issue " + issue.title + " imported!")
+                print_info("Processing comments...")
+                # FIXME  what about comments on comments?
+                issue_id = import_response.json()["number"]
+                for note in issue.notes.list():
+                    #print_info(note.body)
+                    import_response: requests.Response = gitea_api.post("/repos/" + owner + "/" + repo + "/issues/" + str(issue_id) + "/comments", json={
+                        "body": note.body,
+                    })
+                    if import_response.ok:
+                        print_info("Comment imported!")
+                    else:
+                        print_error("Comment import failed: " + import_response.text)
             else:
                 print_error("Issue " + issue.title + " import failed: " + import_response.text)
 

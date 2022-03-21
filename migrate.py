@@ -446,7 +446,7 @@ def _import_project_repo_collaborators(gitea_api: pygitea, collaborators: [gitla
             else:
                 print_warning("Unsupported access level " + str(collaborator.access_level) + ", setting permissions to 'read'!")
             
-            import_response: requests.Response = gitea_api.put("/repos/" + name_clean(project.namespace['name']) +"/" + name_clean(project.name) + "/collaborators/" + collaborator.username, json={
+            import_response: requests.Response = gitea_api.put("/repos/" + collaborator.username +"/" + name_clean(project.name) + "/collaborators/" + collaborator.username, json={
                 "permission": permission
             })
             if import_response.ok:
@@ -567,7 +567,8 @@ def import_projects(gitlab_api: gitlab.Gitlab, gitea_api: pygitea):
     # read all projects and their issues
     projects: gitlab.v4.objects.Project = gitlab_api.projects.list(all=True)
 
-    print("Found " + str(len(projects)) + " gitlab projects as user " + gitlab_api.user.username)
+    username = gitlab_api.user.username
+    print("Found " + str(len(projects)) + " gitlab projects as user " + username)
 
     for project in projects:
         try:
@@ -576,7 +577,7 @@ def import_projects(gitlab_api: gitlab.Gitlab, gitea_api: pygitea):
             milestones: [gitlab.v4.objects.ProjectMilestone] = project.milestones.list(all=True)
             issues: [gitlab.v4.objects.ProjectIssue] = project.issues.list(all=True)
 
-            print("Importing project " + name_clean(project.name) + " from owner " + name_clean(project.namespace['name']))
+            print("Importing project " + name_clean(project.name) + " from owner " + username)
             print("Found " + str(len(collaborators)) + " collaborators for project " + name_clean(project.name))
             print("Found " + str(len(labels)) + " labels for project " + name_clean(project.name))
             print("Found " + str(len(milestones)) + " milestones for project " + name_clean(project.name))
@@ -586,7 +587,7 @@ def import_projects(gitlab_api: gitlab.Gitlab, gitea_api: pygitea):
             print("This project failed: \n {}, \n reason {}: ".format(project.name, e))
         
         else:
-            projectOwner = name_clean(project.namespace['name'])
+            projectOwner = username
             projectName = name_clean(project.name)
 
             # import project repo
